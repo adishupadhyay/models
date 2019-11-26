@@ -315,18 +315,17 @@ def write_saved_model(saved_model_path,
           tf.saved_model.signature_def_utils.build_signature_def(
               inputs=tensor_info_inputs,
               outputs=tensor_info_outputs,
-              method_name=tf.saved_model.signature_constants.PREDICT_METHOD_NAME
+              method_name="tensorflow/serving/predict")
           ))
 
       builder.add_meta_graph_and_variables(
           sess,
           [tf.saved_model.tag_constants.SERVING],
-          signature_def_map={
-              tf.saved_model.signature_constants
-              .DEFAULT_SERVING_SIGNATURE_DEF_KEY:
-                  detection_signature,
-          },
-      )
+           signature_def_map = {
+                                "serving_default":
+                                detection_signature,
+                                },
+       )
       builder.save()
 def _write_saved_model(saved_model_path,
                        trained_checkpoint_prefix,
@@ -340,10 +339,9 @@ def _write_saved_model(saved_model_path,
     outputs: A tensor dictionary containing the outputs of a DetectionModel.
   """
   saver = tf.train.Saver()
-  with session.Session() as sess:
+  with tf.Session() as sess:
     saver.restore(sess, trained_checkpoint_prefix)
     builder = tf.saved_model.builder.SavedModelBuilder(saved_model_path)
-
     tensor_info_inputs = {
           'inputs': tf.saved_model.utils.build_tensor_info(inputs)}
     tensor_info_outputs = {}
@@ -354,13 +352,13 @@ def _write_saved_model(saved_model_path,
         tf.saved_model.signature_def_utils.build_signature_def(
               inputs=tensor_info_inputs,
               outputs=tensor_info_outputs,
-              method_name=signature_constants.PREDICT_METHOD_NAME))
+              method_name="tensorflow/serving/predict"))
 
     builder.add_meta_graph_and_variables(
           sess, [tf.saved_model.tag_constants.SERVING],
           signature_def_map={
-              signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
-                  detection_signature,
+            "serving_default":
+                detection_signature,
           },
       )
     builder.save()
